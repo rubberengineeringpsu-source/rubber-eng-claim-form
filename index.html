@@ -249,29 +249,35 @@
     <div class="row">
       <div class="field small">
         <label>บ้านเลขที่</label>
-        <input type="text" id="addrHouse">
+        <input type="text" id="addrHouse" list="addrHouseList">
+        <datalist id="addrHouseList"></datalist>
       </div>
       <div class="field">
         <label>ถนน</label>
-        <input type="text" id="addrRoad">
+        <input type="text" id="addrRoad" list="addrRoadList">
+        <datalist id="addrRoadList"></datalist>
       </div>
     </div>
     <div class="row">
       <div class="field">
         <label>ตำบล</label>
-        <input type="text" id="addrSubdistrict">
+        <input type="text" id="addrSubdistrict" list="addrSubdistrictList">
+        <datalist id="addrSubdistrictList"></datalist>
       </div>
       <div class="field">
         <label>อำเภอ</label>
-        <input type="text" id="addrDistrict">
+        <input type="text" id="addrDistrict" list="addrDistrictList">
+        <datalist id="addrDistrictList"></datalist>
       </div>
       <div class="field">
         <label>จังหวัด</label>
-        <input type="text" id="addrProvince">
+        <input type="text" id="addrProvince" list="addrProvinceList">
+        <datalist id="addrProvinceList"></datalist>
       </div>
       <div class="field small">
         <label>รหัสไปรษณีย์</label>
-        <input type="text" id="addrPostcode" maxlength="5" inputmode="numeric">
+        <input type="text" id="addrPostcode" maxlength="5" inputmode="numeric" list="addrPostcodeList">
+        <datalist id="addrPostcodeList"></datalist>
       </div>
     </div>
   </div>
@@ -450,6 +456,56 @@ function syncAddressFromReqName() {
 }
 reqNameSelect.addEventListener('change', syncAddressFromReqName);
 syncAddressFromReqName();
+
+/* ---------------- จดจำที่อยู่ที่เคยกรอก (datalist + localStorage) ---------------- */
+const ADDR_MEMORY_FIELDS = [
+  { input: addrHouseInput, key: 'addrMemory_house', listId: 'addrHouseList' },
+  { input: addrRoadInput, key: 'addrMemory_road', listId: 'addrRoadList' },
+  { input: addrSubdistrictInput, key: 'addrMemory_subdistrict', listId: 'addrSubdistrictList' },
+  { input: addrDistrictInput, key: 'addrMemory_district', listId: 'addrDistrictList' },
+  { input: addrProvinceInput, key: 'addrMemory_province', listId: 'addrProvinceList' },
+  { input: addrPostcodeInput, key: 'addrMemory_postcode', listId: 'addrPostcodeList' }
+];
+const ADDR_MEMORY_MAX = 15;
+
+function loadAddrMemory(key) {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function saveAddrMemory(key, value) {
+  if (!value) return;
+  try {
+    let list = loadAddrMemory(key);
+    list = list.filter(v => v !== value);
+    list.unshift(value);
+    if (list.length > ADDR_MEMORY_MAX) list = list.slice(0, ADDR_MEMORY_MAX);
+    localStorage.setItem(key, JSON.stringify(list));
+  } catch (e) { /* localStorage ไม่พร้อมใช้งาน - ข้ามไป */ }
+}
+
+function renderAddrDatalist(listId, values) {
+  const dl = document.getElementById(listId);
+  if (!dl) return;
+  dl.innerHTML = '';
+  values.forEach(v => {
+    const opt = document.createElement('option');
+    opt.value = v;
+    dl.appendChild(opt);
+  });
+}
+
+ADDR_MEMORY_FIELDS.forEach(f => {
+  renderAddrDatalist(f.listId, loadAddrMemory(f.key));
+  f.input.addEventListener('change', () => {
+    saveAddrMemory(f.key, f.input.value.trim());
+    renderAddrDatalist(f.listId, loadAddrMemory(f.key));
+  });
+});
 
 const CERT_TRIGGER_ATTACH_TYPES = new Set(['ใบรับรองแทนใบเสร็จ', 'ใบสำคัญรับเงิน']);
 function anyCertItemSelected() {
