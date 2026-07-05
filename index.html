@@ -597,7 +597,7 @@ function getUnitValue(tr) {
 /* ---------------- Build replacement map ---------------- */
 function buildReplacements() {
   const project = projectSelect.value;
-  const deadline = toThaiLongDate(document.getElementById('deadline').value);
+  const deadline = toThaiShortDate(document.getElementById('deadline').value);
   const itemType = document.querySelector('input[name=itemType]:checked').value;
   const funding = getFundingValue();
   const borrow = document.querySelector('input[name=borrow]:checked').value;
