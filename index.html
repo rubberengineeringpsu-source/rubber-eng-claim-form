@@ -105,6 +105,30 @@
     table.items { font-size: 24px; }
     table.items th, table.items td { padding: 4px; }
   }
+  .addr-ac-wrap { position: relative; }
+  .addr-suggest {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-top: none;
+    max-height: 220px;
+    overflow-y: auto;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+  }
+  .addr-suggest.show { display: block; }
+  .addr-suggest-item {
+    padding: 8px 10px;
+    font-size: 24px;
+    cursor: pointer;
+  }
+  .addr-suggest-item:hover, .addr-suggest-item.active {
+    background: #f0ede6;
+  }
 </style>
 </head>
 <body>
@@ -247,37 +271,37 @@
     <h2>ที่อยู่ผู้รับเงิน (สำหรับใบรับรองแทนใบเสร็จ)</h2>
     <div class="hint" style="margin-bottom:10px;">มีรายการที่เลือกเอกสารแนบเป็น "ใบรับรองแทนใบเสร็จ" หรือ "ใบสำคัญรับเงิน" กรุณากรอก/ตรวจสอบที่อยู่ผู้รับเงินสำหรับเอกสารใบรับรองแทนใบเสร็จ + ใบสำคัญรับเงิน</div>
     <div class="row">
-      <div class="field small">
+      <div class="field small addr-ac-wrap">
         <label>บ้านเลขที่</label>
-        <input type="text" id="addrHouse" list="addrHouseList">
-        <datalist id="addrHouseList"></datalist>
+        <input type="text" id="addrHouse" autocomplete="off">
+        <div class="addr-suggest" id="addrHouseSuggest"></div>
       </div>
-      <div class="field">
+      <div class="field addr-ac-wrap">
         <label>ถนน</label>
-        <input type="text" id="addrRoad" list="addrRoadList">
-        <datalist id="addrRoadList"></datalist>
+        <input type="text" id="addrRoad" autocomplete="off">
+        <div class="addr-suggest" id="addrRoadSuggest"></div>
       </div>
     </div>
     <div class="row">
-      <div class="field">
+      <div class="field addr-ac-wrap">
         <label>ตำบล</label>
-        <input type="text" id="addrSubdistrict" list="addrSubdistrictList">
-        <datalist id="addrSubdistrictList"></datalist>
+        <input type="text" id="addrSubdistrict" autocomplete="off">
+        <div class="addr-suggest" id="addrSubdistrictSuggest"></div>
       </div>
-      <div class="field">
+      <div class="field addr-ac-wrap">
         <label>อำเภอ</label>
-        <input type="text" id="addrDistrict" list="addrDistrictList">
-        <datalist id="addrDistrictList"></datalist>
+        <input type="text" id="addrDistrict" autocomplete="off">
+        <div class="addr-suggest" id="addrDistrictSuggest"></div>
       </div>
-      <div class="field">
+      <div class="field addr-ac-wrap">
         <label>จังหวัด</label>
-        <input type="text" id="addrProvince" list="addrProvinceList">
-        <datalist id="addrProvinceList"></datalist>
+        <input type="text" id="addrProvince" autocomplete="off">
+        <div class="addr-suggest" id="addrProvinceSuggest"></div>
       </div>
-      <div class="field small">
+      <div class="field small addr-ac-wrap">
         <label>รหัสไปรษณีย์</label>
-        <input type="text" id="addrPostcode" maxlength="5" inputmode="numeric" list="addrPostcodeList">
-        <datalist id="addrPostcodeList"></datalist>
+        <input type="text" id="addrPostcode" maxlength="5" inputmode="numeric" autocomplete="off">
+        <div class="addr-suggest" id="addrPostcodeSuggest"></div>
       </div>
     </div>
   </div>
@@ -457,14 +481,15 @@ function syncAddressFromReqName() {
 reqNameSelect.addEventListener('change', syncAddressFromReqName);
 syncAddressFromReqName();
 
-/* ---------------- จดจำที่อยู่ที่เคยกรอก (datalist + localStorage) ---------------- */
+/* ---------------- จดจำที่อยู่ที่เคยกรอก (custom autocomplete + localStorage) ---------------- */
+/* ใช้ custom dropdown เขียนเอง แทน <datalist> เพราะ iOS Safari กดลูกศรของ datalist ไม่ทำงาน */
 const ADDR_MEMORY_FIELDS = [
-  { input: addrHouseInput, key: 'addrMemory_house', listId: 'addrHouseList' },
-  { input: addrRoadInput, key: 'addrMemory_road', listId: 'addrRoadList' },
-  { input: addrSubdistrictInput, key: 'addrMemory_subdistrict', listId: 'addrSubdistrictList' },
-  { input: addrDistrictInput, key: 'addrMemory_district', listId: 'addrDistrictList' },
-  { input: addrProvinceInput, key: 'addrMemory_province', listId: 'addrProvinceList' },
-  { input: addrPostcodeInput, key: 'addrMemory_postcode', listId: 'addrPostcodeList' }
+  { input: addrHouseInput, key: 'addrMemory_house', boxId: 'addrHouseSuggest' },
+  { input: addrRoadInput, key: 'addrMemory_road', boxId: 'addrRoadSuggest' },
+  { input: addrSubdistrictInput, key: 'addrMemory_subdistrict', boxId: 'addrSubdistrictSuggest' },
+  { input: addrDistrictInput, key: 'addrMemory_district', boxId: 'addrDistrictSuggest' },
+  { input: addrProvinceInput, key: 'addrMemory_province', boxId: 'addrProvinceSuggest' },
+  { input: addrPostcodeInput, key: 'addrMemory_postcode', boxId: 'addrPostcodeSuggest' }
 ];
 const ADDR_MEMORY_MAX = 15;
 
@@ -488,22 +513,47 @@ function saveAddrMemory(key, value) {
   } catch (e) { /* localStorage ไม่พร้อมใช้งาน - ข้ามไป */ }
 }
 
-function renderAddrDatalist(listId, values) {
-  const dl = document.getElementById(listId);
-  if (!dl) return;
-  dl.innerHTML = '';
-  values.forEach(v => {
-    const opt = document.createElement('option');
-    opt.value = v;
-    dl.appendChild(opt);
+function renderAddrSuggestions(field, filterText) {
+  const box = document.getElementById(field.boxId);
+  if (!box) return;
+  const all = loadAddrMemory(field.key);
+  const text = (filterText || '').trim().toLowerCase();
+  const filtered = text ? all.filter(v => v.toLowerCase().includes(text)) : all;
+  box.innerHTML = '';
+  if (filtered.length === 0) {
+    box.classList.remove('show');
+    return;
+  }
+  filtered.forEach(v => {
+    const item = document.createElement('div');
+    item.className = 'addr-suggest-item';
+    item.textContent = v;
+    /* ใช้ pointerdown แทน click เพื่อกันปัญหา input เสีย focus (blur) ก่อนคลิกจะถูกประมวลผล */
+    item.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      field.input.value = v;
+      box.classList.remove('show');
+      box.innerHTML = '';
+    });
+    box.appendChild(item);
   });
+  box.classList.add('show');
+}
+
+function hideAddrSuggestions(field) {
+  const box = document.getElementById(field.boxId);
+  if (box) box.classList.remove('show');
 }
 
 ADDR_MEMORY_FIELDS.forEach(f => {
-  renderAddrDatalist(f.listId, loadAddrMemory(f.key));
+  f.input.addEventListener('focus', () => renderAddrSuggestions(f, f.input.value));
+  f.input.addEventListener('input', () => renderAddrSuggestions(f, f.input.value));
+  f.input.addEventListener('blur', () => {
+    /* หน่วงเวลาเล็กน้อยกันกรณี blur มาก่อน pointerdown ของรายการแนะนำ (เผื่อ preventDefault ไม่ทันในบางเบราว์เซอร์) */
+    setTimeout(() => hideAddrSuggestions(f), 150);
+  });
   f.input.addEventListener('change', () => {
     saveAddrMemory(f.key, f.input.value.trim());
-    renderAddrDatalist(f.listId, loadAddrMemory(f.key));
   });
 });
 
